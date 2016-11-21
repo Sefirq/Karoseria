@@ -2,8 +2,13 @@ import numpy as np
 import os
 from skimage.color import rgb2grey
 from imread import imread
-from skimage.filters import gaussian, sobel_h, sobel_v
+from skimage.filters import gaussian, sobel_h, sobel_v, threshold_otsu, scharr
 from skimage.data import imread
+from skimage.measure import find_contours
+from skimage.feature import canny
+from skimage.morphology import erosion, square, dilation
+from skimage.draw import polygon
+from matplotlib import pyplot as plt
 
 
 def list_of_images():
@@ -37,12 +42,22 @@ def custom_sobel(image):
     return magnitude
 
 
-def edgy_color(image_name):
+def edgy_color(image_name, plot_nr):
     image = imread(image_name, as_grey=False)
-    image = rgb2grey(image)
-    image = gaussian(image, sigma=3)
-    image = custom_sobel(image)
-    return image
+    bw = rgb2grey(image)  # obrazek biało-czarny
+    avg = bw.mean()
+    mini = bw.min()
+    #for i, r in enumerate(bw):  # by pozbyć się chmur
+    #    for j, px in enumerate(r):
+    #        if px > mini + 0.28:
+    #            bw[i][j] = avg  # uśrednij piksel [i][j]
+    bw = bw > threshold_otsu(bw)  # biało-czarna tablica po progowaniu
+    bw = gaussian(bw, sigma=5)
+    bw = scharr(bw)
+    bw = erosion(bw, square(6))
+    bw = dilation(bw, square(6))
+    contours = find_contours(bw, 0.9)  # funkcja znajdująca kontury
+    return bw, contours
 
 
 def find_centroids(labels):
