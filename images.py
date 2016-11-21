@@ -1,4 +1,3 @@
-import os
 import matplotlib.pyplot as plt
 from imread import imread
 from utilities import edgy, edgy_color, list_of_images
@@ -25,7 +24,7 @@ for i in range(18):
     original = imread(images[i], as_grey=False)
     b = fig2.add_subplot(7, 3, i + 1)
     image = edgy_color(images[i])
-    #plt.imshow(original)
+    # plt.imshow(original)
     plt.imshow(image, cmap="Greys_r")
     plt.axis('off')
 plt.savefig('advanced.pdf')

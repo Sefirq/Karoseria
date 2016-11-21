@@ -1,21 +1,16 @@
 import numpy as np
 import os
-from skimage.color import rgb2hsv, rgb2grey
+from skimage.color import rgb2grey
 from imread import imread
-from scipy import ndimage, random
 from skimage.filters import gaussian, sobel_h, sobel_v
-from skimage.segmentation import find_boundaries
-from skimage.morphology import dilation
-from skimage.draw import circle
 from skimage.data import imread
+
 
 def list_of_images():
     DATASETS_PATH = os.path.join(os.path.realpath("__file__"), "../imgs_easy")  # sciezka do podfolderu ze zdjeciami
-    images = list()
     for root, directory, files in os.walk(os.path.abspath(DATASETS_PATH)):  # dla plikow w folderze o podanej sciezce
         for image in files:
-            images.append(os.path.join(root, image))
-    return images
+            yield os.path.join(root, image)
 
 
 def discretize(image):
@@ -29,9 +24,9 @@ def discretize(image):
 
 def edgy(image_name):
     image = imread(image_name, as_grey=True)
-    #image = gaussian(image, sigma=.97)
-    #image = custom_sobel(image)
-    #image = discretize(image)
+    # image = gaussian(image, sigma=.97)
+    # image = custom_sobel(image)
+    # image = discretize(image)
     return image
 
 
@@ -48,41 +43,6 @@ def edgy_color(image_name):
     image = gaussian(image, sigma=3)
     image = custom_sobel(image)
     return image
-    image = rgb2hsv(image)
-    image = image[..., 2]
-
-    objects, objects_count = ndimage.label(image < .5)
-
-    sizes = ndimage.sum(image, objects, range(objects_count + 1))
-    mask_size = sizes < 35
-    remove_pixel = mask_size[objects]
-    objects[remove_pixel] = 0
-    labels = np.unique(objects)
-    objects = np.searchsorted(labels, objects)
-
-    contours = find_boundaries(objects)
-    objects[contours == 0] = 0
-    objects = dilation(objects)
-    objects = dilation(objects)
-
-    colours = []
-    for _ in range(objects_count + 1):
-        colours.append([random.randint(256) / 255 for _ in range(3)] + [1])
-    colours[0][3] = 0
-
-    mask = np.zeros_like(objects, dtype=np.float64)
-    x, y = objects.shape
-    mask.resize(x, y, 4)
-    for r, row in enumerate(objects):
-        for c, element in enumerate(row):
-            mask[r, c] = colours[element]
-
-    centroids = find_centroids(objects)
-    for c in centroids:
-        rr, cc = circle(c[0], c[1], int(x / 100))
-        mask[rr, cc] = 1
-
-    return mask
 
 
 def find_centroids(labels):
