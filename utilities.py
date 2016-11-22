@@ -1,6 +1,7 @@
 import numpy as np
 import os
-from skimage.color import rgb2grey
+from PIL import Image
+from skimage.color import rgb2grey, rgb2hsv
 from imread import imread
 from skimage.filters import gaussian, sobel_h, sobel_v, threshold_otsu, scharr
 from skimage.data import imread
@@ -44,8 +45,17 @@ def custom_sobel(image):
 
 
 def edgy_color(image_name, plot_nr):
-    image = imread(image_name, as_grey=False)
-    bw = rgb2grey(image)  # obrazek biało-czarny
+    png = Image.open(image_name)
+    png.load()  # required for png.split()
+
+    try:
+        image = Image.new("RGB", png.size, (255, 255, 255))
+        image.paste(png, mask=png.split()[3])  # 3 is the alpha channel
+    except IndexError:
+        image = png
+
+    bw = rgb2hsv(image)  # obrazek biało-czarny
+    bw = bw[..., 2]
     avg = bw.mean()
     mini = bw.min()
     for i, r in enumerate(bw):  # by pozbyć się chmur
@@ -68,6 +78,7 @@ def edgy_color(image_name, plot_nr):
     contour = points[hull.vertices, 0], points[hull.vertices, 1]
 
     return bw, contour
+    return bw, ([], [])
 
 
 def find_centroids(labels):
