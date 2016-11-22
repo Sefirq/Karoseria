@@ -9,6 +9,7 @@ from skimage.feature import canny
 from skimage.morphology import erosion, square, dilation
 from skimage.draw import polygon
 from matplotlib import pyplot as plt
+from scipy.spatial import ConvexHull
 
 
 def list_of_images():
@@ -47,17 +48,26 @@ def edgy_color(image_name, plot_nr):
     bw = rgb2grey(image)  # obrazek biało-czarny
     avg = bw.mean()
     mini = bw.min()
-    #for i, r in enumerate(bw):  # by pozbyć się chmur
-    #    for j, px in enumerate(r):
-    #        if px > mini + 0.28:
-    #            bw[i][j] = avg  # uśrednij piksel [i][j]
+    for i, r in enumerate(bw):  # by pozbyć się chmur
+        for j, px in enumerate(r):
+            if px > mini + 0.28:
+                bw[i][j] = avg  # uśrednij piksel [i][j]
     bw = bw > threshold_otsu(bw)  # biało-czarna tablica po progowaniu
     bw = gaussian(bw, sigma=5)
     bw = scharr(bw)
     bw = erosion(bw, square(6))
     bw = dilation(bw, square(6))
-    contours = find_contours(bw, 0.9)  # funkcja znajdująca kontury
-    return bw, contours
+
+    points = []
+    for i, row in enumerate(bw):
+        for j, elem in enumerate(row):
+            if elem > 0.01:
+                points.append([j, i])
+    points = np.array(points)
+    hull = ConvexHull(points)
+    contour = points[hull.vertices, 0], points[hull.vertices, 1]
+
+    return bw, contour
 
 
 def find_centroids(labels):

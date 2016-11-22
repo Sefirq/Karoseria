@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from imread import imread
 from utilities import edgy, edgy_color, list_of_images
 
-
 for i in range(18):
     images = list(list_of_images())
 print(images)
@@ -11,24 +10,23 @@ fig = plt.figure(figsize=(60, 40))
 fig.set_facecolor('black')
 plt.subplots_adjust(left=0.0, bottom=0.0, right=1.0, top=1.0,
                     wspace=0.0, hspace=0.0)
-for i in range(6):
+'''for i in range(6):
     print("basic " + str(i + 1) + "/6")
     a = fig.add_subplot(2, 3, i + 1)
     image = edgy(images[i])
     plt.imshow(image, cmap='gray')
     plt.axis('off')
 plt.savefig('basic.pdf', facecolor=fig.get_facecolor())
-
+'''
 fig2 = plt.figure(figsize=(60, 60))
 
 for i in range(18):
-    print("advanced " + str(i + 1) + "/18")
+    print("advanced " + str(i + 1) + "/18... ", end='', flush=True)
     original = imread(images[i], as_grey=False)
     b = fig2.add_subplot(7, 3, i + 1)
-    image, contours = edgy_color(images[i], i+1)
-    #plt.imshow(original)
-    #for contour in contours:
-    #    b.plot(contour[:, 1], contour[:, 0], linewidth=2)  # dodaj na wykres kontur
+    image, (x, y) = edgy_color(images[i], i + 1)
     plt.imshow(image, cmap="Greys_r")
     plt.axis('off')
+    plt.plot(x, y, 'r--', lw=10)
+    print('done')
 plt.savefig('advanced.pdf')
