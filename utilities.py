@@ -1,23 +1,22 @@
-import numpy as np
 import os
+
+import numpy as np
 from PIL import Image
-from skimage.color import rgb2grey, rgb2hsv
-from imread import imread
-from skimage.filters import gaussian, sobel_h, sobel_v, threshold_otsu, scharr
-from skimage.data import imread
-from skimage.measure import find_contours
-from skimage.feature import canny
-from skimage.morphology import erosion, square, dilation
-from skimage.draw import polygon
-from matplotlib import pyplot as plt
 from scipy.spatial import ConvexHull
+from skimage.color import rgb2hsv
+from skimage.filters import gaussian, threshold_otsu, scharr
+from skimage.morphology import erosion, square, dilation
 
 
-def list_of_images():
-    DATASETS_PATH = os.path.join(os.path.realpath("__file__"), "../imgs_easy")  # sciezka do podfolderu ze zdjeciami
-    for root, directory, files in os.walk(os.path.abspath(DATASETS_PATH)):  # dla plikow w folderze o podanej sciezce
+def list_of_images(number=-1):
+    i = 0
+    data_sets_path = os.path.join(os.path.realpath("__file__"), "../imgs_easy")  # sciezka do podfolderu ze zdjeciami
+    for root, directory, files in os.walk(os.path.abspath(data_sets_path)):  # dla plikow w folderze o podanej sciezce
         for image in files:
-            yield os.path.join(root, image)
+            if i == number:
+                return
+            yield i, os.path.join(root, image)
+            i += 1
 
 
 def discretize(image):
@@ -29,22 +28,7 @@ def discretize(image):
     return image
 
 
-def edgy(image_name):
-    image = imread(image_name, as_grey=True)
-    # image = gaussian(image, sigma=.97)
-    # image = custom_sobel(image)
-    # image = discretize(image)
-    return image
-
-
-def custom_sobel(image):
-    edge_horizont = sobel_h(image)
-    edge_vertical = sobel_v(image)
-    magnitude = np.hypot(edge_horizont, edge_vertical)
-    return magnitude
-
-
-def edgy_color(image_name, plot_nr):
+def edgy_color(image_name):
     png = Image.open(image_name)
     png.load()  # required for png.split()
 
@@ -55,7 +39,10 @@ def edgy_color(image_name, plot_nr):
         image = png
 
     bw = rgb2hsv(image)  # obrazek biało-czarny
-    bw = bw[..., 2]
+    x, y, _ = bw.shape
+    b = 2
+    bw = bw[b:x - b, b:y - b, 2]
+
     avg = bw.mean()
     mini = bw.min()
     for i, r in enumerate(bw):  # by pozbyć się chmur
@@ -75,10 +62,12 @@ def edgy_color(image_name, plot_nr):
                 points.append([j, i])
     points = np.array(points)
     hull = ConvexHull(points)
-    contour = points[hull.vertices, 0], points[hull.vertices, 1]
+    vertices = hull.vertices.tolist()
+    if hull.vertices[0] != hull.vertices[-1]:
+        vertices.append(hull.vertices[0])
+    contour = points[vertices, 0], points[vertices, 1]
 
     return bw, contour
-    return bw, ([], [])
 
 
 def find_centroids(labels):
