@@ -6,6 +6,8 @@ from scipy.spatial import ConvexHull
 from skimage.color import rgb2hsv
 from skimage.filters import gaussian, threshold_otsu, scharr
 from skimage.morphology import erosion, square, dilation
+from skimage.draw import polygon_perimeter, polygon
+from skimage.measure import moments, moments_central, moments_normalized, moments_hu
 
 
 def list_of_images(number=-1):
@@ -28,16 +30,38 @@ def discretize(image):
     return image
 
 
-def edgy_color(image_name):
+def moments_of_image(polygon_image):
+    m = moments(polygon_image)
+    cm = moments_central(polygon_image, m[0, 1] / m[0, 0], m[1, 0] / m[0, 0])
+    nm = moments_normalized(cm)
+    hm = moments_hu(nm)
+    return hm
+
+
+def feature_detection(shape, cont):
+    height_of_car = (max(cont[1]) - min(cont[1]))/shape[1]
+    polygon_perimeter_array = np.zeros(shape)
+    polygon_array = np.zeros(shape)
+    rr, cc = polygon_perimeter(cont[0], cont[1])
+    rr2, cc2 = polygon(cont[0], cont[1])
+    polygon_perimeter_array[cc, rr] = 1  # array with 1's on the perimeter of contour
+    polygon_array[cc2, rr2] = 1  # array with 1's on the whole polygon, bounded by contour
+    circumference = polygon_perimeter_array.sum()
+    area = polygon_array.sum()
+    how_much_of_picture = area/(shape[0]*shape[1])  # ratio of car area to whole picture area
+    hu_moments_of_image = moments_of_image(polygon_array)
+    return circumference/area, height_of_car, how_much_of_picture, hu_moments_of_image
+
+
+def edgy_color(image_name, class_of_image):
     png = Image.open(image_name)
     png.load()  # required for png.split()
 
     try:
-        image = Image.new("RGB", png.size, (255, 255, 255))
+        image = Image.new("RGB", png.size, (255, 0, 255))
         image.paste(png, mask=png.split()[3])  # 3 is the alpha channel
     except IndexError:
         image = png
-
     bw = rgb2hsv(image)  # obrazek biało-czarny
     x, y, _ = bw.shape
     b = 2
@@ -45,7 +69,7 @@ def edgy_color(image_name):
 
     avg = bw.mean()
     mini = bw.min()
-    for i, r in enumerate(bw):  # by pozbyć się chmur
+    for i, r in enumerate(bw):  # by pozbyć się tła
         for j, px in enumerate(r):
             if px > mini + 0.28:
                 bw[i][j] = avg  # uśrednij piksel [i][j]
@@ -66,8 +90,14 @@ def edgy_color(image_name):
     if hull.vertices[0] != hull.vertices[-1]:
         vertices.append(hull.vertices[0])
     contour = points[vertices, 0], points[vertices, 1]
-
-    return bw, contour
+    returned = list(feature_detection(bw.shape, contour))
+    features_of_image = returned[:3]
+    for moment in returned[3]:
+        features_of_image.append(moment)
+    print(features_of_image)
+    # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
+    # probably the first one is not a good feature - needs further analysis
+    return bw, contour, features_of_image
 
 
 def find_centroids(labels):
