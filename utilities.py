@@ -34,23 +34,27 @@ def moments_of_image(polygon_image):
     m = moments(polygon_image)
     cm = moments_central(polygon_image, m[0, 1] / m[0, 0], m[1, 0] / m[0, 0])
     nm = moments_normalized(cm)
-    hm = moments_hu(nm)
+    hm = {}
+    for i, m in enumerate(moments_hu(nm)):
+        hm['hu{}'.format(i)] = m
     return hm
 
 
 def feature_detection(shape, cont):
-    height_of_car = (max(cont[1]) - min(cont[1]))/shape[1]
+    height_of_car = (max(cont[1]) - min(cont[1])) / shape[1]
     polygon_perimeter_array = np.zeros(shape)
     polygon_array = np.zeros(shape)
     rr, cc = polygon_perimeter(cont[0], cont[1])
     rr2, cc2 = polygon(cont[0], cont[1])
     polygon_perimeter_array[cc, rr] = 1  # array with 1's on the perimeter of contour
     polygon_array[cc2, rr2] = 1  # array with 1's on the whole polygon, bounded by contour
-    circumference = polygon_perimeter_array.sum()
+    perimeter = polygon_perimeter_array.sum()
     area = polygon_array.sum()
-    how_much_of_picture = area/(shape[0]*shape[1])  # ratio of car area to whole picture area
+    how_much_of_picture = area / (shape[0] * shape[1])  # ratio of car area to whole picture area
     hu_moments_of_image = moments_of_image(polygon_array)
-    return circumference/area, height_of_car, how_much_of_picture, hu_moments_of_image
+    features = {'PpA': perimeter / area, 'H': height_of_car, 'cov': how_much_of_picture}
+    features.update(hu_moments_of_image)
+    return features
 
 
 def edgy_color(image_name, class_of_image):
@@ -90,14 +94,13 @@ def edgy_color(image_name, class_of_image):
     if hull.vertices[0] != hull.vertices[-1]:
         vertices.append(hull.vertices[0])
     contour = points[vertices, 0], points[vertices, 1]
-    returned = list(feature_detection(bw.shape, contour))
-    features_of_image = returned[:3]
-    for moment in returned[3]:
-        features_of_image.append(moment)
-    print(features_of_image)
+    features_of_image = feature_detection(bw.shape, contour)
+    image_description = {'class': class_of_image}
+    image_description.update(features_of_image)
+    # print(image_description)
     # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
     # probably the first one is not a good feature - needs further analysis
-    return bw, contour, features_of_image
+    return bw, contour, image_description
 
 
 def find_centroids(labels):
@@ -115,3 +118,19 @@ def find_centroids(labels):
         if key != 0:
             centroids.append((value['x'] / value['n'], value['y'] / value['n']))
     return centroids
+
+
+def to_csv(filename, results):
+    file = open(filename, 'w')
+    header = []
+    for label, _ in results[0].items():
+        header.append(label)
+
+    file.write(','.join(header) + '\n')
+
+    for row in results:
+        row_ = []
+        for label in header:
+            row_.append(str(row[label]))
+        file.write(','.join(row_) + '\n')
+    file.close()
