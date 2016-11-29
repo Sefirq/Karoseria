@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from pandas import read_csv
 from PIL import Image
 from scipy.spatial import ConvexHull
 from skimage.color import rgb2hsv
@@ -8,6 +9,7 @@ from skimage.filters import gaussian, threshold_otsu, scharr
 from skimage.morphology import erosion, square, dilation
 from skimage.draw import polygon_perimeter, polygon
 from skimage.measure import moments, moments_central, moments_normalized, moments_hu
+from sklearn.tree import DecisionTreeClassifier
 
 
 def list_of_images(number=-1):
@@ -100,7 +102,7 @@ def edgy_color(image_name, class_of_image):
     # print(image_description)
     # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
     # probably the first one is not a good feature - needs further analysis
-    return bw, contour, image_description
+    return contour, image_description
 
 
 def find_centroids(labels):
@@ -134,3 +136,20 @@ def to_csv(filename, results):
             row_.append(str(row[label]))
         file.write(','.join(row_) + '\n')
     file.close()
+
+
+def classify():
+    df_dataset = read_csv('result.csv')
+    train = df_dataset.iloc[:45, :]
+    test = df_dataset.iloc[45:, :]
+    training_labels = list(train.loc[:, 'class'])
+    testing_labels = list(test.loc[:, 'class'])
+    del train['class']
+    del test['class']
+    training_features = train.values.tolist()
+    testing_features = test.values.tolist()
+    classifier = DecisionTreeClassifier()
+    classifier.fit(training_features, training_labels)
+    predicted_labels = classifier.predict(testing_features)
+    for i, j in zip(testing_labels, predicted_labels):
+        print(i, j)
