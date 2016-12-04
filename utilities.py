@@ -9,7 +9,8 @@ from skimage.filters import gaussian, threshold_otsu, scharr
 from skimage.morphology import erosion, square, dilation
 from skimage.draw import polygon_perimeter, polygon
 from skimage.measure import moments, moments_central, moments_normalized, moments_hu
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+import pydotplus
 
 
 def list_of_images(number=-1):
@@ -21,6 +22,19 @@ def list_of_images(number=-1):
                 return
             yield i, os.path.join(root, image)
             i += 1
+
+
+def set_of_images(number=-1):
+    setofimg = set()
+    i = 0
+    data_sets_path = os.path.join(os.path.realpath("__file__"), "../imgs_easy")  # sciezka do podfolderu ze zdjeciami
+    for root, directory, files in os.walk(os.path.abspath(data_sets_path)):  # dla plikow w folderze o podanej sciezce
+        for image in files:
+            if i == number:
+                return setofimg
+            setofimg.add(os.path.join(root, image))
+            i += 1
+    return setofimg
 
 
 def discretize(image):
@@ -43,7 +57,8 @@ def moments_of_image(polygon_image):
 
 
 def feature_detection(shape, cont):
-    height_of_car = (max(cont[1]) - min(cont[1])) / shape[1]
+    height_of_car = (max(cont[1]) - min(cont[1])) / shape[0]
+    height_divided_by_width = (max(cont[1]) - min(cont[1])) / (max(cont[0]) - min(cont[0]))
     polygon_perimeter_array = np.zeros(shape)
     polygon_array = np.zeros(shape)
     rr, cc = polygon_perimeter(cont[0], cont[1])
@@ -54,7 +69,7 @@ def feature_detection(shape, cont):
     area = polygon_array.sum()
     how_much_of_picture = area / (shape[0] * shape[1])  # ratio of car area to whole picture area
     hu_moments_of_image = moments_of_image(polygon_array)
-    features = {'PpA': perimeter / area, 'H': height_of_car, 'cov': how_much_of_picture}
+    features = {'PpA': perimeter / area, 'H': height_of_car, 'cov': how_much_of_picture, 'HpW': height_divided_by_width}
     features.update(hu_moments_of_image)
     return features
 
@@ -72,7 +87,7 @@ def edgy_color(image_name, class_of_image):
     x, y, _ = bw.shape
     b = 2
     bw = bw[b:x - b, b:y - b, 2]
-
+    del png, image
     avg = bw.mean()
     mini = bw.min()
     for i, r in enumerate(bw):  # by pozbyć się tła
@@ -99,6 +114,7 @@ def edgy_color(image_name, class_of_image):
     features_of_image = feature_detection(bw.shape, contour)
     image_description = {'class': class_of_image}
     image_description.update(features_of_image)
+    image_description['NoV'] = len(vertices)
     # print(image_description)
     # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
     # probably the first one is not a good feature - needs further analysis
@@ -136,20 +152,3 @@ def to_csv(filename, results):
             row_.append(str(row[label]))
         file.write(','.join(row_) + '\n')
     file.close()
-
-
-def classify():
-    df_dataset = read_csv('result.csv')
-    train = df_dataset.iloc[:45, :]
-    test = df_dataset.iloc[45:, :]
-    training_labels = list(train.loc[:, 'class'])
-    testing_labels = list(test.loc[:, 'class'])
-    del train['class']
-    del test['class']
-    training_features = train.values.tolist()
-    testing_features = test.values.tolist()
-    classifier = DecisionTreeClassifier()
-    classifier.fit(training_features, training_labels)
-    predicted_labels = classifier.predict(testing_features)
-    for i, j in zip(testing_labels, predicted_labels):
-        print(i, j)
