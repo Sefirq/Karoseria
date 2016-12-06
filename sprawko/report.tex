@@ -21,11 +21,16 @@ Do wykonania zadania wykorzystane zostały następujące filtry:
 \begin{description}
 \item[gaussian] — przeprowadza rozmycie Gaussa;\\
 na wejściu otrzymuje zdjęcie w odcieniach szarości (macierz 2D) i odchylenie standardowe, na wyjściu daje macierz 2D – przefiltrowane zdjęcie.
-
-//TODO
+Jego zadaniem jest rozmycie obrazu i tym samym pozbycie się niepotrzebnych i zaniedbywalnych szczegółów  a także szumów z naszego obrazu. Parametrem rozmycia Gaussa jest odchylenie standardowe $\sigma$ rozkładu normalnego. Im większe ono jest tym bardziej rozmyty jest obraz. W naszym programie $\sigma = 5$. 
+\item[scharr] - odmiana filtru Sobela ze specjalnie dobranymi operatorami;\\
+Na wejściu funkcji musimy podać macierz z obrazem, gdzie w każdej komórce musi być jedna wartość (obraz w skali szarości, w jednym określonym kolorze). Opcjonalnie możemy podać maskę filtrowania. Wyjściem z funkcji jest przetransformowany obraz. Wybraliśmy filtr Scharra, ponieważ jest najbardziej niewrażliwy na rotację spośród innych dostępnych w bibliotece skimage (Sobel, Prewitt, Canny).
+\item[dilation] - TODO
+\item[erosion] - TODO
 \end{description}
 oraz funkcje:
 \begin{description}
+\item[threshold\_otsu] -- progowanie Otsu, redukujące szarość do binarnego podziału na biel i czerń;\\
+Dzięki temu progowaniu otrzymaliśmy obraz biało-czarny, bez żadnych dodatkowych szarości. W ten sposób łatwiej nam było pozbyć się tła z obrazka.
 \item[ConvexHull] — otoczka wypukła;\\
 na wejściu otrzymuje zbiór punktów, na wyjściu zwraca indeksy punktów należących do otoczki.
 
@@ -37,6 +42,13 @@ na wejściu otrzymuje zbiór punktów, na wyjściu zwraca indeksy punktów nale�
 \section{Dane do eksperymentu}
 //TODO pochodzenie danych i przykładowe obrazy
 \section{Efektywność}
-//TODO dyskusja skuteczności (trafność klasyfikowania, zdolność dyskryminacji, problemy) i efektywności (on-line/off-line, fps, itp.)
-
+Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny. Atrybut decyzyjny miał jedną z trzech wartości ze zbioru ${d, s, v}$, odpowiednio dla samochodów typu sedan, suv i van. Natomiast pośród atrybutów warunkowych możemy wyróżnić:
+\begin{enumerate}
+\item Siedem momentów Hu
+\item Stosunek obwodu otoczki wypukłej samochodu do jej pola
+\item Znormalizowana wysokość konturu -- osiągnęliśmy to dzięki podzieleniu różnicy maksimum i minimum współrzędnych \textit{y} przez wysokość całego obrazka w pikselach.
+\item Stosunek wysokości samochodu do jego długości
+\item Stosunek pola powierzchni samochodu do pola całego obrazka
+\item Liczba wierzchołków otoczki wypukłej samochodu -- wklęsłe wierzchołki przy oponach samochodów zostały usunięte w procesie tworzenia otoczki, jednak nie wpływa to negatywnie na ważność tej cechy, ponieważ każdy samochód ma te wierzchołki, więc możemy je od każdego przykładu odjąć.
+\end{enumerate}
 \end{document}
