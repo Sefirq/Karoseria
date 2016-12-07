@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-from pandas import read_csv
 from PIL import Image
 from scipy.spatial import ConvexHull
 from skimage.color import rgb2hsv
@@ -9,9 +8,6 @@ from skimage.filters import gaussian, threshold_otsu, scharr
 from skimage.morphology import erosion, square, dilation
 from skimage.draw import polygon_perimeter, polygon
 from skimage.measure import moments, moments_central, moments_normalized, moments_hu
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
-import pydotplus
-
 
 def list_of_images(number=-1):
     i = 0
@@ -115,9 +111,7 @@ def edgy_color(image_name, class_of_image):
     image_description = {'class': class_of_image}
     image_description.update(features_of_image)
     image_description['NoV'] = len(vertices)
-    # print(image_description)
     # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
-    # probably the first one is not a good feature - needs further analysis
     return contour, image_description
 
 

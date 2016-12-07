@@ -11,8 +11,8 @@ training_labels = list(train.loc[:, 'class'])
 testing_labels = list(test.loc[:, 'class'])
 del train['class']
 del test['class']
-#del train['HpW']
-#del test['HpW']
+del train['HpW']
+del test['HpW']
 print(train.columns.values)
 training_features = train.values.tolist()
 testing_features = test.values.tolist()
@@ -31,4 +31,4 @@ for i, row in enumerate(x):
     print(lol[i], row)
 dot_data = export_graphviz(classifier, feature_names=train.columns.values,class_names=['d','s','v'], out_file=None)
 graph = pydotplus.graph_from_dot_data(dot_data)
-graph.write_pdf("iris.pdf")
+graph.write_pdf("cars.pdf")
