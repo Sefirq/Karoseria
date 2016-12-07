@@ -13,7 +13,7 @@
 \section*{Udział autorów}
 \begin{itemize}
 \item Sebastian Firlik //TODO
-\item Adam Pioterek //TODO
+\item Adam Pioterek — implementacja wykrywania samochodów na obrazie oraz ekstrahowania wielokątów zawierających samochody.
 \end{itemize}
 
 \section{Filtry i funkcje}
@@ -22,31 +22,51 @@ Do wykonania zadania wykorzystane zostały następujące filtry:
 \item[gaussian] — przeprowadza rozmycie Gaussa;\\
 na wejściu otrzymuje zdjęcie w odcieniach szarości (macierz 2D) i odchylenie standardowe, na wyjściu daje macierz 2D – przefiltrowane zdjęcie.
 Jego zadaniem jest rozmycie obrazu i tym samym pozbycie się niepotrzebnych i zaniedbywalnych szczegółów  a także szumów z naszego obrazu. Parametrem rozmycia Gaussa jest odchylenie standardowe $\sigma$ rozkładu normalnego. Im większe ono jest tym bardziej rozmyty jest obraz. W naszym programie $\sigma = 5$. 
-\item[scharr] - odmiana filtru Sobela ze specjalnie dobranymi operatorami;\\
-Na wejściu funkcji musimy podać macierz z obrazem, gdzie w każdej komórce musi być jedna wartość (obraz w skali szarości, w jednym określonym kolorze). Opcjonalnie możemy podać maskę filtrowania. Wyjściem z funkcji jest przetransformowany obraz. Wybraliśmy filtr Scharra, ponieważ jest najbardziej niewrażliwy na rotację spośród innych dostępnych w bibliotece skimage (Sobel, Prewitt, Canny).
-\item[dilation] - TODO
-\item[erosion] - TODO
+\item[scharr] — odmiana filtru Sobela ze specjalnie dobranymi operatorami;\\
+na wejściu funkcji musimy podać macierz z obrazem, gdzie w każdej komórce musi być jedna wartość (obraz w skali szarości, w jednym określonym kolorze). Opcjonalnie możemy podać maskę filtrowania. Wyjściem z funkcji jest przetransformowany obraz. Wybraliśmy filtr Scharra, ponieważ jest najbardziej niewrażliwy na rotację spośród innych dostępnych w bibliotece skimage (Sobel, Prewitt, Canny).
+\item[dylatacja] — morfologiczna dylatacja, która powiększa jasne rejony na rzecz ciemnych;
+na wejściu otrzymuje zdjęcie w odcieniach szarości (macierz 2D), na wyjściu daje macierz 2D.
+\item[erozja] — morfologiczna erozja, która powiększa ciemne rejony na rzecz jasnych;
+na wejściu otrzymuje zdjęcie w odcieniach szarości (macierz 2D), na wyjściu daje macierz 2D.
 \end{description}
 oraz funkcje:
 \begin{description}
-\item[threshold\_otsu] -- progowanie Otsu, redukujące szarość do binarnego podziału na biel i czerń;\\
-Dzięki temu progowaniu otrzymaliśmy obraz biało-czarny, bez żadnych dodatkowych szarości. W ten sposób łatwiej nam było pozbyć się tła z obrazka.
+\item[threshold\_otsu] — progowanie Otsu, redukujące szarość do binarnego podziału na biel i czerń;\\
+dzięki temu progowaniu otrzymaliśmy obraz biało-czarny, bez żadnych dodatkowych szarości. W ten sposób łatwiej nam było pozbyć się tła z obrazka.
+\item[moments\_hu] — momenty Hu;\\
+na wejściu otrzymuje znormalizowane momenty centralne, na wyjściu daje listę momentów Hu.
 \item[ConvexHull] — otoczka wypukła;\\
 na wejściu otrzymuje zbiór punktów, na wyjściu zwraca indeksy punktów należących do otoczki.
-
-//TODO
 \end{description}
 
 Wyjściem z ostatniej funkcji -- ConvexHull -- jest otoczka, którą przekształcamy w listę wierzchołków. Stanowią one wierzchołki wypukłego konturu samochodu. Następnie uruchamiamy naszą funkcję feature\_detection, której zadaniem jest uzyskać z danego na wejściu rozmiaru obrazka i konturu samochodu nasze cechy, opisane dalej.
 
-Na końcu zapisujemy cechy, związane z każdym z obrazków do pliku .csv, co pozwala nam utworzyć w przyszłości zbiór uczący i testowy naszego klasyfikatora.
+Na końcu zapisujemy cechy, związane z każdym z obrazków do pliku CSV, co pozwala nam utworzyć w przyszłości zbiór uczący i testowy naszego klasyfikatora.
 
 W pliku classify.py znajduje się skrypt, którego celem jest stworzenie drzewa decyzyjnego (CART), nauczenie go wzorców na podstawie naszych losowo wybranych danych treningowych, a następnie przetestowanie przykładów, które nie zostały użyte do procesu uczenia. Po zakończeniu działania programu otrzymujemy wizualizację drzewa decyzyjnego z podziałami na różnych atrybutach
  
 \section{Cel eksperymentu}
-//TODO
+Celem eksperymentu było stworzenie systemu rozpoznającego na zdjęciach samochody i kategoryzującego rozpoznane samochody jako sedan, suv lub van. //TODO
 \section{Dane do eksperymentu}
-//TODO pochodzenie danych i przykładowe obrazy
+//TODO pochodzenie danych
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=1\textwidth]{../imgs_easy/suv_07.png}
+\end{center}
+\label{fig: wykres1}
+\end{figure}
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=1\textwidth]{../imgs_easy/van_19.jpg}
+\end{center}
+\label{fig: wykres2}
+\end{figure}
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=1\textwidth]{../imgs_easy/sedan_22.jpg}
+\end{center}
+\label{fig: wykres3}
+\end{figure}
 \section{Efektywność}
 Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny dla każdego obrazka. Atrybut decyzyjny miał jedną z trzech wartości ze zbioru ${d, s, v}$, odpowiednio dla samochodów typu sedan, suv i van. Natomiast pośród atrybutów warunkowych możemy wyróżnić:
 \begin{enumerate}
@@ -57,6 +77,5 @@ Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny dla każ
 \item Stosunek pola powierzchni samochodu do pola całego obrazka
 \item Liczba wierzchołków otoczki wypukłej samochodu -- wklęsłe wierzchołki przy oponach samochodów zostały usunięte w procesie tworzenia otoczki, jednak nie wpływa to negatywnie na ważność tej cechy, ponieważ każdy samochód ma te wierzchołki, więc możemy je od każdego przykładu odjąć.
 \end{enumerate}
-
 
 \end{document}
