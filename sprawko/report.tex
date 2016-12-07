@@ -36,13 +36,19 @@ na wejściu otrzymuje zbiór punktów, na wyjściu zwraca indeksy punktów nale�
 
 //TODO
 \end{description}
+
+Wyjściem z ostatniej funkcji -- ConvexHull -- jest otoczka, którą przekształcamy w listę wierzchołków. Stanowią one wierzchołki wypukłego konturu samochodu. Następnie uruchamiamy naszą funkcję feature\_detection, której zadaniem jest uzyskać z danego na wejściu rozmiaru obrazka i konturu samochodu nasze cechy, opisane dalej.
+
+Na końcu zapisujemy cechy, związane z każdym z obrazków do pliku .csv, co pozwala nam utworzyć w przyszłości zbiór uczący i testowy naszego klasyfikatora.
+
+W pliku classify.py znajduje się skrypt, którego celem jest stworzenie drzewa decyzyjnego (CART), nauczenie go wzorców na podstawie naszych losowo wybranych danych treningowych, a następnie przetestowanie przykładów, które nie zostały użyte do procesu uczenia. Po zakończeniu działania programu otrzymujemy wizualizację drzewa decyzyjnego z podziałami na różnych atrybutach
  
 \section{Cel eksperymentu}
 //TODO
 \section{Dane do eksperymentu}
 //TODO pochodzenie danych i przykładowe obrazy
 \section{Efektywność}
-Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny. Atrybut decyzyjny miał jedną z trzech wartości ze zbioru ${d, s, v}$, odpowiednio dla samochodów typu sedan, suv i van. Natomiast pośród atrybutów warunkowych możemy wyróżnić:
+Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny dla każdego obrazka. Atrybut decyzyjny miał jedną z trzech wartości ze zbioru ${d, s, v}$, odpowiednio dla samochodów typu sedan, suv i van. Natomiast pośród atrybutów warunkowych możemy wyróżnić:
 \begin{enumerate}
 \item Siedem momentów Hu
 \item Stosunek obwodu otoczki wypukłej samochodu do jej pola
@@ -51,4 +57,6 @@ Nasz program generował 12 atrybutów warunkowych i 1 atrybut decyzyjny. Atrybut
 \item Stosunek pola powierzchni samochodu do pola całego obrazka
 \item Liczba wierzchołków otoczki wypukłej samochodu -- wklęsłe wierzchołki przy oponach samochodów zostały usunięte w procesie tworzenia otoczki, jednak nie wpływa to negatywnie na ważność tej cechy, ponieważ każdy samochód ma te wierzchołki, więc możemy je od każdego przykładu odjąć.
 \end{enumerate}
+
+
 \end{document}
