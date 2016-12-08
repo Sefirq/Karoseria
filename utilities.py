@@ -9,6 +9,7 @@ from skimage.morphology import erosion, square, dilation
 from skimage.draw import polygon_perimeter, polygon
 from skimage.measure import moments, moments_central, moments_normalized, moments_hu
 
+# generator ścieżek do zdjęć
 def list_of_images(number=-1):
     i = 0
     data_sets_path = os.path.join(os.path.realpath("__file__"), "../imgs_easy")  # sciezka do podfolderu ze zdjeciami
@@ -20,6 +21,7 @@ def list_of_images(number=-1):
             i += 1
 
 
+# funkcja tworząca zbiór zdjęć
 def set_of_images(number=-1):
     setofimg = set()
     i = 0
@@ -42,6 +44,7 @@ def discretize(image):
     return image
 
 
+# funkcja licząca momenty Hu
 def moments_of_image(polygon_image):
     m = moments(polygon_image)
     cm = moments_central(polygon_image, m[0, 1] / m[0, 0], m[1, 0] / m[0, 0])
@@ -52,17 +55,18 @@ def moments_of_image(polygon_image):
     return hm
 
 
+# funkcja wykrywająca cechy
 def feature_detection(shape, cont):
-    height_of_car = (max(cont[1]) - min(cont[1])) / shape[0]
-    height_divided_by_width = (max(cont[1]) - min(cont[1])) / (max(cont[0]) - min(cont[0]))
+    height_of_car = (max(cont[1]) - min(cont[1])) / shape[0]  # wysokość samochodu
+    height_divided_by_width = (max(cont[1]) - min(cont[1])) / (max(cont[0]) - min(cont[0]))  # wysokość samochodu do szerokości
     polygon_perimeter_array = np.zeros(shape)
     polygon_array = np.zeros(shape)
     rr, cc = polygon_perimeter(cont[0], cont[1])
     rr2, cc2 = polygon(cont[0], cont[1])
     polygon_perimeter_array[cc, rr] = 1  # array with 1's on the perimeter of contour
     polygon_array[cc2, rr2] = 1  # array with 1's on the whole polygon, bounded by contour
-    perimeter = polygon_perimeter_array.sum()
-    area = polygon_array.sum()
+    perimeter = polygon_perimeter_array.sum()  # obwód
+    area = polygon_array.sum()  # polw powierzchni
     how_much_of_picture = area / (shape[0] * shape[1])  # ratio of car area to whole picture area
     hu_moments_of_image = moments_of_image(polygon_array)
     features = {'PpA': perimeter / area, 'H': height_of_car, 'cov': how_much_of_picture, 'HpW': height_divided_by_width}
@@ -70,20 +74,26 @@ def feature_detection(shape, cont):
     return features
 
 
+# main function
 def edgy_color(image_name, class_of_image):
     png = Image.open(image_name)
-    png.load()  # required for png.split()
+    png.load()
 
+    # wycięcie kanału alpha
     try:
         image = Image.new("RGB", png.size, (255, 0, 255))
         image.paste(png, mask=png.split()[3])  # 3 is the alpha channel
     except IndexError:
         image = png
-    bw = rgb2hsv(image)  # obrazek biało-czarny
+
+    # ekstrakcja kanału v i obcięcie brzegów o 2px
+    bw = rgb2hsv(image)
     x, y, _ = bw.shape
     b = 2
     bw = bw[b:x - b, b:y - b, 2]
     del png, image
+
+    # uśrednianie i wykrywanie konturów
     avg = bw.mean()
     mini = bw.min()
     for i, r in enumerate(bw):  # by pozbyć się tła
@@ -96,6 +106,7 @@ def edgy_color(image_name, class_of_image):
     bw = erosion(bw, square(6))
     bw = dilation(bw, square(6))
 
+    # otoczka wypukła
     points = []
     for i, row in enumerate(bw):
         for j, elem in enumerate(row):
@@ -107,31 +118,16 @@ def edgy_color(image_name, class_of_image):
     if hull.vertices[0] != hull.vertices[-1]:
         vertices.append(hull.vertices[0])
     contour = points[vertices, 0], points[vertices, 1]
+
+    #znajdywanie cech
     features_of_image = feature_detection(bw.shape, contour)
     image_description = {'class': class_of_image}
     image_description.update(features_of_image)
     image_description['NoV'] = len(vertices)
-    # above f_o_i is a list of circum/area, height, area/area_of_image and all the Hu moments for this picture
     return contour, image_description
 
 
-def find_centroids(labels):
-    centroids_all = {}
-    for i, row in enumerate(labels):
-        for j, element in enumerate(row):
-            if element not in centroids_all:
-                centroids_all[element] = {'x': 0, 'y': 0, 'n': 0}
-            centroids_all[element]['x'] += i
-            centroids_all[element]['y'] += j
-            centroids_all[element]['n'] += 1
-
-    centroids = []
-    for key, value in centroids_all.items():
-        if key != 0:
-            centroids.append((value['x'] / value['n'], value['y'] / value['n']))
-    return centroids
-
-
+# zapisywanie wyników do CSV
 def to_csv(filename, results):
     file = open(filename, 'w')
     header = []
