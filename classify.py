@@ -1,12 +1,11 @@
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.metrics import confusion_matrix
 import pydotplus
 
 
-df_dataset = read_csv('result.csv')
-train = df_dataset.iloc[:59, :]
-test = df_dataset.iloc[59:, :]
+train = read_csv('result.csv')
+test = read_csv('result.csv')
 training_labels = list(train.loc[:, 'class'])
 testing_labels = list(test.loc[:, 'class'])
 del train['class']

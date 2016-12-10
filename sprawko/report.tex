@@ -125,6 +125,10 @@ Accuracy = \frac{3 + 4 + 1}{15} = \frac{8}{15} = 0,5(3)
 
 Referencyjną wartością naszej trafności jest przypadek, gdy wszystkie przykłady "z góry" umieścimy w jednej, najliczniejszej klasie. U nas mamy trzy równoliczne klasy, więc minimalnie powinniśmy uzyskać trafność klasyfikacji na poziomie $33\%$. W naszym przypadku trafność wynosi ponad $50\%$, więc nasze znalezione cechy są ważne w rozwiązywaniu tego problemu klasyfikacji. Oczywiście zależnie od wylosowanych do zbioru treningowego przykładów, trafność może się różnić, jednak podana wartość jest wartością często się powtarzającą, bliską średniej. Zdarzały się przypadki, w których nawet 11 na 15 samochodów było dobrze klasyfikowanych. 
 
+Gdy zbiorem treningowym był cały zbiór naszych obrazków to niezależnie od tego, ile spośród tych 75 przykładów wybraliśmy do zbioru testowego, zawsze trafność klasyfikacji wynosiła 1. Oznacza to, że cechy, które odkryliśmy w naszych obrazkach są wystarczające, by dobrze je podzielić na nowo do kategorii.
+
+Czas wykonania najdłuższej naszej funkcji, czyli tej, która nakłada filtry i wykrywa otoczki wypukłe na naszych obrazkach, a następnie wylicza wszystkie cechy waha się w przedziale od 0,2s do nawet kilkunastu sekund, jednak często zdarzają się przypadki, gdzie najdłuższy czas wykonania tej funkcji nie przekracza czterech sekund, a średni czas jej wykonania wynosi 0,8s. Czas przetwarzania jest zależny od rozmiaru analizowanego obrazka -- niektóre są dużo większe niż inne, nie normalizowaliśmy ich rozmiarów na wejściu.
+
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width=1\textwidth]{./images/cars.pdf}
